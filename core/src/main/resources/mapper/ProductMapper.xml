@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhancheng.dao.ProductMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.zhancheng.entity.Product">
+        <id column="pid" property="pid"/>
+        <result column="pt_id" property="ptId"/>
+        <result column="sid" property="sid"/>
+        <result column="product_name" property="productName"/>
+        <result column="product_intro" property="productIntro"/>
+        <result column="detail_pc" property="detailPc"/>
+        <result column="price" property="price"/>
+        <result column="market_price" property="marketPrice"/>
+        <result column="price_unit" property="priceUnit"/>
+        <result column="store" property="store"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="is_recommend" property="isRecommend"/>
+        <result column="status" property="status"/>
+        <result column="gmt_create" property="gmtCreate"/>
+        <result column="gmt_modified" property="gmtModified"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        pid, sid, product_name, product_intro, detail_pc, price, market_price, price_unit, store, status, is_deleted, gmt_create, gmt_modified
+    </sql>
+    <select id="getProductList" resultType="com.zhancheng.vo.ProductListVo">
+        SELECT
+        zp.pid,
+        product_name,
+        is_recommend,
+        price,
+        zp.gmt_create,
+        store,
+        status,
+        zpt.type_name,
+        SUM(count) count
+        FROM
+        zc_product zp
+        LEFT JOIN zc_product_like zpl
+        ON zp.pid = zpl.pid AND is_watch = 1 AND zpl.is_deleted = 0
+        LEFT JOIN zc_product_type zpt
+        ON zp.pt_id = zpt.tid AND zpt.is_deleted = 0
+        <where>
+            zp.is_deleted = 0
+            <if test="tid != null">
+                AND zpt.tid = #{tid} OR zpt.pid = #{tid}
+            </if>
+            <if test="status != null">
+                AND zp.status = #{status}
+            </if>
+        </where>
+        GROUP BY zp.pid
+    </select>
+    <select id="queryDetails" resultType="com.zhancheng.vo.ProductVo">
+        SELECT
+            zp.pid,
+            product_name,
+            product_intro,
+            pt_id,
+            zpt.pid superiorId,
+            is_recommend,
+            detail_pc,
+            price,
+            zp.gmt_create,
+            store,
+            status,
+            GROUP_CONCAT(url ORDER BY flag DESC ,is_cover DESC) url
+        FROM
+            zc_product zp
+            LEFT JOIN zc_product_image zpi
+            ON zp.pid = zpi.pid  AND zpi.is_deleted = 0
+            LEFT JOIN zc_product_type zpt
+            ON zp.pt_id = zpt.tid AND zpt.is_deleted = 0
+            WHERE zp.is_deleted = 0 AND zp.pid = #{pid}
+            GROUP BY zp.pid
+    </select>
+    <select id="queryRecommend" resultType="com.zhancheng.vo.ProductListVo">
+        SELECT
+            zp.pid,
+            zp.product_name,
+            zp.price,
+            zp.price_unit,
+            zpt.type_name,
+            zpi.url
+        FROM
+            zc_product zp
+            LEFT JOIN zc_product_type zpt
+            ON zp.pt_id = zpt.tid AND zpt.is_deleted = 0
+            LEFT JOIN zc_product_image zpi
+            ON zp.pid = zpi.pid AND zpi.is_cover = 1 AND zpi.is_deleted = 0
+            WHERE zp.is_deleted = 0 AND zp.status &gt; 0
+            ORDER BY zp.is_recommend DESC, zp.gmt_create DESC
+    </select>
+
+</mapper>

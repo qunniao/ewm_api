@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.zhancheng.dao.ProductProcessMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.zhancheng.entity.ProductProcess" id="productProcessMap">
+        <result property="id" column="id"/>
+        <result property="pid" column="pid"/>
+        <result property="name" column="name"/>
+        <result property="content" column="content"/>
+        <result property="equipmentId" column="equipment_id"/>
+        <result property="sort" column="sort"/>
+        <result property="cover" column="cover"/>
+        <result property="isDeleted" column="is_deleted"/>
+        <result property="gmtCreate" column="gmt_create"/>
+        <result property="gmtModified" column="gmt_modified"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+    id,pid,name,content,sort,cover,equipment_id, is_deleted,gmt_create,gmt_modified  </sql>
+    <select id="getPage" resultType="com.zhancheng.vo.ProductProcessListVo">
+        SELECT
+            zpp.*,
+            ze.name equipmentName
+        FROM
+            zc_product_process zpp
+            LEFT JOIN zc_equipment ze ON zpp.equipment_id = ze.id
+            AND ze.is_deleted = 0
+            WHERE pid = #{pid} AND zpp.is_deleted = 0
+            ORDER BY sort ASC
+    </select>
+
+
+</mapper>
